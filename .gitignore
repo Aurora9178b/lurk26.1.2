@@ -1,0 +1,36 @@
+# Gradle and IDE state
+.gradle/
+.idea/
+*.iml
+net/
+build/
+
+# Local Minecraft runtime and generated test instance
+run-client/
+logs/
+crash-reports/
+*.log
+hs_err_pid*.log
+replay_pid*.log
+
+# Local decompiler output and diagnostics
+decompiled/
+vfdecompiled/
+compile-errors*.txt
+compile-success-check*.txt
+
+# Bundled tool distributions and generated classes
+tools/gradle-*/
+tools/*.zip
+tools/*.class
+tools/*.jar
+tools/patch-classes/
+
+# Rejected or partially downloaded artifacts
+*.bad
+
+# Machine-specific Gradle overrides
+gradle-local.properties
+
+# Minecraft game classes are generated locally from the installed client jar
+compile-libs/minecraft-patched.jar

@@ -1,0 +1,24 @@
+package meteordevelopment.meteorclient.systems.modules.movement;
+
+import meteordevelopment.meteorclient.events.entity.player.JumpVelocityMultiplierEvent;
+import meteordevelopment.meteorclient.settings.DoubleSetting;
+import meteordevelopment.meteorclient.settings.Setting;
+import meteordevelopment.meteorclient.settings.SettingGroup;
+import meteordevelopment.meteorclient.systems.modules.Categories;
+import meteordevelopment.meteorclient.systems.modules.Module;
+import meteordevelopment.orbit.EventHandler;
+
+public class HighJump extends Module {
+   private final SettingGroup sgGeneral = this.settings.getDefaultGroup();
+   private final Setting<Double> multiplier = this.sgGeneral
+      .add(new DoubleSetting.Builder().name("jump-multiplier").description("Jump height multiplier.").defaultValue(1.0).min(0.0).build());
+
+   public HighJump() {
+      super(Categories.Movement, "high-jump", "Makes you jump higher than normal.");
+   }
+
+   @EventHandler
+   private void onJumpVelocityMultiplier(JumpVelocityMultiplierEvent event) {
+      event.multiplier = (float)(event.multiplier * this.multiplier.get());
+   }
+}

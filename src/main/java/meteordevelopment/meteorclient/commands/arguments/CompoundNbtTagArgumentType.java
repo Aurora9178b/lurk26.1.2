@@ -1,0 +1,59 @@
+package meteordevelopment.meteorclient.commands.arguments;
+
+import com.mojang.brigadier.StringReader;
+import com.mojang.brigadier.arguments.ArgumentType;
+import com.mojang.brigadier.context.CommandContext;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import java.util.Collection;
+import java.util.List;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.TagParser;
+
+public class CompoundNbtTagArgumentType implements ArgumentType<CompoundTag> {
+   private static final CompoundNbtTagArgumentType INSTANCE = new CompoundNbtTagArgumentType();
+   private static final Collection<String> EXAMPLES = List.of("{foo:bar}", "{foo:[aa, bb],bar:15}");
+
+   public static CompoundNbtTagArgumentType create() {
+      return INSTANCE;
+   }
+
+   public static CompoundTag get(CommandContext<?> context) {
+      return context.getArgument("nbt", CompoundTag.class);
+   }
+
+   private CompoundNbtTagArgumentType() {
+   }
+
+   public CompoundTag parse(StringReader reader) throws CommandSyntaxException {
+      reader.skipWhitespace();
+      if (!reader.canRead()) {
+         throw TagParser.ERROR_EXPECTED_COMPOUND.createWithContext(reader);
+      }
+
+      StringBuilder b = new StringBuilder();
+      int open = 0;
+
+      while (reader.canRead()) {
+         if (reader.peek() == '{') {
+            open++;
+         } else if (reader.peek() == '}') {
+            open--;
+         }
+
+         if (open == 0) {
+            break;
+         }
+
+         b.append(reader.read());
+      }
+
+      reader.expect('}');
+      b.append('}');
+      return TagParser.parseCompoundFully(b.toString().replace("$", "§").replace("§§", "$"));
+   }
+
+   @Override
+   public Collection<String> getExamples() {
+      return EXAMPLES;
+   }
+}

@@ -1,0 +1,16 @@
+package meteordevelopment.meteorclient.mixin;
+
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
+import meteordevelopment.meteorclient.systems.modules.Modules;
+import meteordevelopment.meteorclient.systems.modules.movement.NoSlow;
+import net.minecraft.world.food.FoodData;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
+
+@Mixin(FoodData.class)
+public abstract class FoodDataMixin {
+   @ModifyExpressionValue(method = "hasEnoughFood()Z", at = @At(value = "CONSTANT", args = "floatValue=6.0f"))
+   private float onHunger(float constant) {
+      return Modules.get().get(NoSlow.class).hunger() ? -1.0F : constant;
+   }
+}

@@ -1,0 +1,9 @@
+# Local-only paths for runClient. Copy to gradle-local.properties.
+minecraft_runtime_jar=C:/path/to/26.1.2.jar
+minecraft_libraries_dir=C:/path/to/libraries
+fabric_loader_jar=C:/path/to/fabric-loader-0.19.2.jar
+fabric_api_jar=C:/path/to/fabric-api-0.150.0+26.1.2.jar
+external_mods_dir=C:/path/to/mods
+minecraft_json=C:/path/to/26.1.2.json
+assets_dir=C:/path/to/assets
+minecraft_natives_dir=C:/path/to/26.1.2-natives

@@ -1,0 +1,97 @@
+{
+  "keypress": {
+    "sounds": [
+      "meteor-client:keypress"
+    ]
+  },
+  "keyrelease": {
+    "sounds": [
+      "meteor-client:keyrelease"
+    ]
+  },
+  "tap": {
+    "sounds": [
+      "meteor-client:tap"
+    ]
+  },
+  "uwu": {
+    "sounds": [
+      "meteor-client:uwu"
+    ]
+  },
+  "disable": {
+    "sounds": [
+      "meteor-client:disable"
+    ]
+  },
+  "enable": {
+    "sounds": [
+      "meteor-client:enable"
+    ]
+  },
+  "moan1": {
+    "sounds": [
+      "meteor-client:moan1"
+    ]
+  },
+  "moan2": {
+    "sounds": [
+      "meteor-client:moan2"
+    ]
+  },
+  "moan3": {
+    "sounds": [
+      "meteor-client:moan3"
+    ]
+  },
+  "moan4": {
+    "sounds": [
+      "meteor-client:moan4"
+    ]
+  },
+  "skeet": {
+    "sounds": [
+      "meteor-client:skeet"
+    ]
+  },
+  "orthodox": {
+    "sounds": [
+      "meteor-client:orthodox"
+    ]
+  },
+  "boolean": {
+    "sounds": [
+      "meteor-client:boolean"
+    ]
+  },
+  "scroll": {
+    "sounds": [
+      "meteor-client:scroll"
+    ]
+  },
+  "swipein": {
+    "sounds": [
+      "meteor-client:swipein"
+    ]
+  },
+  "swipeout": {
+    "sounds": [
+      "meteor-client:swipeout"
+    ]
+  },
+  "pmsound": {
+    "sounds": [
+      "meteor-client:pmsound"
+    ]
+  },
+  "rifk": {
+    "sounds": [
+      "meteor-client:rifk"
+    ]
+  },
+  "cutie": {
+    "sounds": [
+      "meteor-client:cutie"
+    ]
+  }
+}

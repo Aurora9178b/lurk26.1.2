@@ -1,0 +1,179 @@
+import groovy.json.JsonSlurper
+
+plugins {
+    id 'java-library'
+    id 'maven-publish'
+}
+
+group = project.maven_group
+version = project.mod_version
+
+base {
+    archivesName = project.archives_base_name
+}
+
+def localProperties = new Properties()
+def localPropertiesFile = file('gradle-local.properties')
+if (localPropertiesFile.exists()) {
+    localPropertiesFile.withInputStream { localProperties.load(it) }
+}
+def configuredPath = { String name ->
+    def localValue = localProperties.getProperty(name)
+    localValue != null && !localValue.trim().isEmpty() ? localValue.trim() : project.findProperty(name)?.toString()?.trim()
+}
+def optionalFile = { String name ->
+    def path = configuredPath(name)
+    path ? file(path) : null
+}
+def optionalFiles = { String name ->
+    def path = configuredPath(name)
+    path ? files(file(path)) : files()
+}
+
+def nestedJars = fileTree(dir: 'libs', include: ['*.jar'])
+def compileOnlyJars = fileTree(dir: 'compile-libs', include: ['*.jar'])
+def runtimeBootstrapJars = files(
+    'compile-libs/asm-9.10.1.jar',
+    'compile-libs/asm-tree-9.10.1.jar',
+    'compile-libs/asm-analysis-9.10.1.jar',
+    'compile-libs/asm-util-9.10.1.jar',
+    'compile-libs/sponge-mixin-0.17.2.jar',
+    'compile-libs/mixinextras-0.5.4.jar'
+)
+
+configurations {
+    runClientBootstrap
+}
+
+def minecraftJar = file(project.minecraft_jar)
+def minecraftRuntimeJar = optionalFile('minecraft_runtime_jar')
+def minecraftJson = optionalFile('minecraft_json')
+def minecraftLibrariesDir = optionalFile('minecraft_libraries_dir')
+def minecraftManifest = minecraftJson?.exists() ? new JsonSlurper().parse(minecraftJson) : [libraries: []]
+def minecraftLibraries = minecraftLibrariesDir ? files(minecraftManifest.libraries.findAll { it.downloads?.artifact?.path }.collect { new File(minecraftLibrariesDir, it.downloads.artifact.path) }) : files()
+def externalModsDir = optionalFile('external_mods_dir')
+def externalMods = externalModsDir ? fileTree(dir: externalModsDir, include: ['*.jar']) : files()
+def fabricApiJar = optionalFiles('fabric_api_jar')
+def fabricLoaderJar = optionalFiles('fabric_loader_jar')
+
+dependencies {
+    runClientBootstrap 'org.ow2.asm:asm-commons:9.10.1'
+    compileOnly files(minecraftJar)
+    compileOnly files(minecraftLibraries)
+    compileOnly fabricLoaderJar
+    compileOnly fabricApiJar
+    compileOnly files(externalMods)
+    compileOnly files(nestedJars)
+    compileOnly files(compileOnlyJars)
+}
+
+sourceSets {
+    main {
+        java.srcDirs = ['src/main/java']
+        resources.srcDirs = ['src/main/resources']
+    }
+}
+
+processResources {
+    inputs.property 'version', project.version
+    filesMatching('fabric.mod.json') {
+        expand 'version': project.version
+    }
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
+    withSourcesJar()
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.release = 25
+}
+
+tasks.jar {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    from('LICENSE_meteor-client') {
+        rename { name -> "${name}_Lurk" }
+    }
+    from('libs') {
+        include '*.jar'
+        into 'META-INF/jars'
+    }
+}
+
+publishing {
+    publications {
+        create('mavenJava', MavenPublication) {
+            from components.java
+        }
+    }
+}
+
+
+
+
+def runClientDir = file('run-client')
+def runClientModsDir = file('run-client/mods')
+
+tasks.register('prepareRunClient') {
+    dependsOn tasks.named('jar')
+    doLast {
+        runClientModsDir.mkdirs()
+        fileTree(dir: runClientModsDir).matching { include '*.jar' }.files.each { it.delete() }
+        [fabricApiJar, file('compile-libs/mixinextras-0.5.4.jar')].each { source ->
+            copy {
+                from source
+                into runClientModsDir
+            }
+        }
+        copy {
+            from tasks.named('jar')
+            into runClientModsDir
+        }
+    }
+}
+
+tasks.register('runClient', JavaExec) {
+    dependsOn tasks.named('prepareRunClient')
+    group = 'fabric'
+    description = 'Launches the reconstructed Lurk client in a local Fabric test instance.'
+    mainClass = 'net.fabricmc.loader.impl.launch.knot.KnotClient'
+    classpath = files(
+        fabricLoaderJar,
+        minecraftRuntimeJar,
+        minecraftLibraries,
+        runtimeBootstrapJars,
+        configurations.runClientBootstrap
+    )
+    jvmArgs(
+        '-Dfabric.development=true',
+        "-Djava.library.path=${configuredPath('minecraft_natives_dir') ?: ''}",
+        '-Dfile.encoding=UTF-8'
+    )
+    args(
+        '--username', 'CodexTest',
+        '--version', project.minecraft_version,
+        '--gameDir', runClientDir,
+        '--assetsDir', configuredPath('assets_dir') ?: '',
+        '--assetIndex', '30',
+        '--uuid', '00000000-0000-0000-0000-000000000001',
+        '--accessToken', '0',
+        '--clientId', '0',
+        '--xuid', '0',
+        '--userType', 'legacy',
+        '--versionType', 'Codex',
+        '--width', '854',
+        '--height', '480'
+    )
+    standardInput = System.in
+    doFirst {
+        def required = ['minecraft_runtime_jar', 'minecraft_libraries_dir', 'fabric_loader_jar', 'fabric_api_jar', 'minecraft_json', 'assets_dir', 'minecraft_natives_dir']
+        def missing = required.findAll { !configuredPath(it) }
+        if (!missing.isEmpty()) {
+            throw new GradleException("Missing local runtime configuration: ${missing.join(', ')}. Copy gradle-local.properties.example to gradle-local.properties and fill in the paths.")
+        }
+    }
+}

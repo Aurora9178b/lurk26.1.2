@@ -1,0 +1,55 @@
+package meteordevelopment.meteorclient.systems.modules.render;
+
+import meteordevelopment.meteorclient.events.render.Render3DEvent;
+import meteordevelopment.meteorclient.events.world.TickEvent;
+import meteordevelopment.meteorclient.renderer.ShapeMode;
+import meteordevelopment.meteorclient.settings.ColorSetting;
+import meteordevelopment.meteorclient.settings.EnumSetting;
+import meteordevelopment.meteorclient.settings.Setting;
+import meteordevelopment.meteorclient.settings.SettingGroup;
+import meteordevelopment.meteorclient.systems.modules.Categories;
+import meteordevelopment.meteorclient.systems.modules.Module;
+import meteordevelopment.meteorclient.utils.entity.EntityUtils;
+import meteordevelopment.meteorclient.utils.entity.SortPriority;
+import meteordevelopment.meteorclient.utils.entity.TargetUtils;
+import meteordevelopment.meteorclient.utils.render.color.SettingColor;
+import meteordevelopment.orbit.EventHandler;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.entity.player.Player;
+
+public class CityESP extends Module {
+   private final SettingGroup sgRender = this.settings.createGroup("Render");
+   private final Setting<ShapeMode> shapeMode = this.sgRender
+      .add(
+         ((EnumSetting.Builder)((EnumSetting.Builder)((EnumSetting.Builder)new EnumSetting.Builder().name("shape-mode"))
+                  .description("How the shapes are rendered."))
+               .defaultValue(ShapeMode.Both))
+            .build()
+      );
+   private final Setting<SettingColor> sideColor = this.sgRender
+      .add(new ColorSetting.Builder().name("side-color").description("The side color of the rendering.").defaultValue(new SettingColor(225, 0, 0, 75)).build());
+   private final Setting<SettingColor> lineColor = this.sgRender
+      .add(new ColorSetting.Builder().name("line-color").description("The line color of the rendering.").defaultValue(new SettingColor(225, 0, 0, 255)).build());
+   private BlockPos target;
+
+   public CityESP() {
+      super(Categories.Render, "city-esp", "Displays blocks that can be broken in order to city another player.");
+   }
+
+   @EventHandler
+   private void onTick(TickEvent.Post event) {
+      Player targetEntity = TargetUtils.getPlayerTarget(this.mc.player.blockInteractionRange() + 2.0, SortPriority.LowestDistance);
+      if (TargetUtils.isBadTarget(targetEntity, this.mc.player.blockInteractionRange() + 2.0)) {
+         this.target = null;
+      } else {
+         this.target = EntityUtils.getCityBlock(targetEntity);
+      }
+   }
+
+   @EventHandler
+   private void onRender(Render3DEvent event) {
+      if (this.target != null) {
+         event.renderer.box(this.target, this.sideColor.get(), this.lineColor.get(), this.shapeMode.get(), 0);
+      }
+   }
+}
